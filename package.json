@@ -90,13 +90,15 @@
     "plywood": "0.21.2",
     "plywood-base-api": "0.2.8",
     "plywood-druid-requester": "2.6.1",
+    "presto-client-ts": "^0.11.4",
     "react": "16.6.3",
     "react-copy-to-clipboard": "5.0.1",
     "react-dom": "16.6.3",
     "react-syntax-highlighter": "7.0.2",
     "react-transition-group": "2.2.1",
     "request": "2.87.0",
-    "request-promise-native": "1.0.5"
+    "request-promise-native": "1.0.5",
+    "stream-to-array": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "7.7.2",
@@ -134,6 +136,7 @@
     "@types/request-promise-native": "1.0.14",
     "@types/rewire": "2.5.28",
     "@types/sinon": "4.1.4",
+    "@types/stream-to-array": "2.3.0",
     "@types/superagent": "3.5.6",
     "@types/supertest": "2.0.4",
     "@types/webpack": "4.41.0",

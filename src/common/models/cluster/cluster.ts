@@ -154,10 +154,12 @@ export class Cluster extends BaseImmutable<ClusterValue, ClusterJS> {
     }
   }];
 
-  public type = "druid";
+  // public type = "druid";
+  public type = "presto";
 
   public name: string;
   public url: string;
+  public catalog: string = 'hive';  //presto catalog, default value is "hive"
   public title: string;
   public version: string;
   public timeout: number;

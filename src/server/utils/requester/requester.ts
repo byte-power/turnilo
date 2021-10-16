@@ -22,6 +22,7 @@ import { URL } from "url";
 import { Cluster } from "../../../common/models/cluster/cluster";
 import { threadConditionally } from "../../../common/utils/functional/functional";
 import { RetryOptions } from "../retry-options/retry-options";
+import { prestoRequesterFactory } from "../plywood-presto-adapter/prestoRequester"
 
 export interface ProperRequesterOptions {
   cluster: Cluster;
@@ -57,9 +58,20 @@ function getHostAndProtocol(url: URL): { host: string, protocol: PlywoodProtocol
   };
 }
 
+function getHost(url: URL): string {
+  const { hostname, port} = url;
+  return `${hostname}:${port}`
+}
+
 function createDruidRequester(cluster: Cluster, requestDecorator?: DruidRequestDecorator): PlywoodRequester<any> {
   const { host, protocol } = getHostAndProtocol(new URL(cluster.url));
   return druidRequesterFactory({ host, requestDecorator, protocol });
+}
+
+function createPrestoRequester(cluster: Cluster): PlywoodRequester<any> {
+  const host = getHost(new URL(cluster.url));
+  const catalog = cluster.catalog;
+  return prestoRequesterFactory({host, catalog});
 }
 
 function setRetryOptions({ maxAttempts, delay }: RetryOptions) {
@@ -81,7 +93,8 @@ function setConcurrencyLimit(concurrentLimit: number) {
 export function properRequesterFactory(options: ProperRequesterOptions): PlywoodRequester<any> {
   const { cluster, druidRequestDecorator, verbose, concurrentLimit } = options;
   return threadConditionally(
-    createDruidRequester(cluster, druidRequestDecorator),
+    // createDruidRequester(cluster, druidRequestDecorator),
+    createPrestoRequester(cluster),
     cluster.retry && setRetryOptions(cluster.retry),
     verbose && setVerbose,
     concurrentLimit && setConcurrencyLimit(concurrentLimit)

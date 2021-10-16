@@ -17,6 +17,7 @@
 
 import * as nopt from "nopt";
 import * as path from "path";
+import { External } from "plywood";
 import { LOGGER, NULL_LOGGER } from "../common/logger/logger";
 import {
   AppSettingsJS,
@@ -31,6 +32,7 @@ import { appSettingsToYaml, printExtra, sourcesToYaml } from "../common/utils/ya
 import { ServerSettings, ServerSettingsJS } from "./models/server-settings/server-settings";
 import { loadFileSync } from "./utils/file/file";
 import { SettingsManager } from "./utils/settings-manager/settings-manager";
+import { PrestoExternal } from "./utils/plywood-presto-adapter/prestoExternal"
 
 const PACKAGE_FILE = path.join(__dirname, "../../package.json");
 
@@ -118,14 +120,16 @@ function parseArgs() {
       "with-comments": Boolean,
 
       "file": String,
-      "druid": String
+      "druid": String,
+      "presto": String
     },
     {
       v: ["--verbose"],
       p: ["--port"],
       c: ["--config"],
       f: ["--file"],
-      d: ["--druid"]
+      d: ["--druid"],
+      pr: ["--presto"]
     },
     process.argv
   );
@@ -146,7 +150,7 @@ if (parsedArgs["example"]) {
   parsedArgs["examples"] = true;
 }
 
-const SETTINGS_INPUTS = ["config", "examples", "file", "druid", "postgres", "mysql"];
+const SETTINGS_INPUTS = ["config", "examples", "file", "druid", "postgres", "mysql", "presto"];
 
 var numSettingsInputs = arraySum(SETTINGS_INPUTS.map(input => zeroOne(parsedArgs[input])));
 
@@ -224,7 +228,7 @@ function readConfig(config: AppSettingsJS & SourcesJS) {
 function readArgs(file: string | undefined, url: string | undefined) {
   const sources = {
     clusters: !isTruthy(url) ? [] : [new Cluster({
-      name: "druid",
+      name: "presto",
       url,
       sourceListScan: "auto",
       sourceListRefreshInterval: Cluster.DEFAULT_SOURCE_LIST_REFRESH_INTERVAL,
@@ -248,7 +252,10 @@ function readArgs(file: string | undefined, url: string | undefined) {
 
 const { appSettings, sources } = configContent
   ? readConfig(configContent)
-  : readArgs(parsedArgs.file, parsedArgs.druid);
+  : readArgs(parsedArgs.file, parsedArgs.presto);
+
+//register presto external adapter
+External.register(PrestoExternal);
 
 export const SETTINGS_MANAGER = new SettingsManager(appSettings, sources, {
   logger,
