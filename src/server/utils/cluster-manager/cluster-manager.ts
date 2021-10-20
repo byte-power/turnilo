@@ -184,7 +184,6 @@ export class ClusterManager {
 
   private updateSourceListRefreshTimer() {
     const { logger, cluster } = this;
-
     if (this.sourceListRefreshInterval !== cluster.getSourceListRefreshInterval()) {
       this.sourceListRefreshInterval = cluster.getSourceListRefreshInterval();
 
@@ -285,7 +284,7 @@ export class ClusterManager {
     if (this.version) return Promise.resolve(null);
 
     const { logger, cluster } = this;
-    logger.log(`Cluster '${cluster.name}' is running druid@${version}`);
+    logger.log(`Cluster '${cluster.name}' is running presto@${version}`);
     this.version = version;
 
     // Update all externals if needed
@@ -325,7 +324,6 @@ export class ClusterManager {
           if (verbose) logger.log(`For cluster '${cluster.name}' got sources: [${sources.join(", ")}]`);
           // For every un-accounted source: make an external and add it to the managed list.
           let introspectionTasks: Array<Promise<void>> = [];
-
           this.managedExternals.forEach(ex => {
             if (sources.find(src => src === String(ex.external.source)) == null) {
               logger.log(`Missing source '${String(ex.external.source)}' + " for cluster '${cluster.name}', removing...`);
@@ -335,7 +333,6 @@ export class ClusterManager {
 
           sources.forEach(source => {
             const existingExternalsForSource = this.managedExternals.filter(managedExternal => externalContainsSource(managedExternal.external, source));
-
             if (existingExternalsForSource.length) {
               if (verbose) logger.log(`Cluster '${cluster.name}' already has an external for '${source}' ('${existingExternalsForSource[0].name}')`);
               if (!this.introspectedSources[source]) {
@@ -347,7 +344,7 @@ export class ClusterManager {
               }
 
             } else {
-              logger.log(`Cluster '${cluster.name}' making external for '${source}'`);
+              logger.log(`Cluster '${cluster.name}' making external for '${source}'`);    
               const external = cluster.makeExternalFromSourceName(source, this.version).attachRequester(this.requester);
               const newManagedExternal: ManagedExternal = {
                 name: this.generateExternalName(external),

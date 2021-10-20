@@ -3,6 +3,7 @@ import { PlywoodRequester } from 'plywood-base-api';
 import { AttributeInfo, Attributes, PseudoDatum, PlyType, External, ExternalJS, ExternalValue, SQLExternal } from 'plywood';
 // import { PseudoDatum } from 'plywood';
 import { PrestoDialect } from './prestoDialect';
+import { List } from 'immutable';
 // import { PlyType } from 'plywood/build/types';
 // import { External, ExternalJS, ExternalValue } from 'plywood/build/external/baseExternal';
 // import { SQLExternal } from 'plywood/build/external/sqlExternal';
@@ -24,8 +25,26 @@ export class PrestoExternal extends SQLExternal {
         return new PrestoExternal(value);
     }
 
+    static queryListValueToPrestoSQLDescribeRow(listValue: any): any{
+        if(!listValue.length) {
+          return [];
+        }
+        let sub_list = listValue[0];
+        return sub_list.map((subListValue: string[]) => {
+          if (subListValue.length !== 3) {
+            return null;
+          }
+          return {
+            name: subListValue[0],
+            sqlType: subListValue[1],
+            arrayType: subListValue[2],
+          }
+        })
+    }
+
     static postProcessIntrospect(columns: PrestoSQLDescribeRow[]): Attributes {
-        return columns
+      let columnsValue = PrestoExternal.queryListValueToPrestoSQLDescribeRow(columns);
+      return columnsValue
           .map((column: PrestoSQLDescribeRow) => {
             let name = column.name;
             let type: PlyType;
@@ -79,23 +98,25 @@ export class PrestoExternal extends SQLExternal {
           }),
         ).then((sources: any) => {
           if (!sources.length) return sources;
-          let key = Object.keys(sources[0])[0];
-          return sources.map((s: PseudoDatum) => s[key]).sort();
+          let sub_sources = sources[0];
+          let key = Object.keys(sub_sources[0])[0];
+          return sub_sources.map((s: PseudoDatum) => s[key]).sort();
         });
     }
 
     static getVersion(requester: PlywoodRequester<any>): Promise<string> {
-        return toArray(requester({ query: `SELECT 'aws-emr-presto'` })).then((res: any) => {
+        return toArray(requester({ query: `SELECT '0.0.1-aws-emr-presto'` })).then((res: any) => {
           if (!Array.isArray(res) || res.length !== 1) throw new Error('invalid version response');
-          let key = Object.keys(res[0])[0];
+          let sub_res = res[0];
+          let key = Object.keys(sub_res[0])[0];
           if (!key) throw new Error('invalid version response (no key)');
-          return res[0][key];
+          return sub_res[0][key];
         });
     }
 
     constructor(parameters: ExternalValue) {
         super(parameters, new PrestoDialect());
-        this._ensureEngine('postgres');
+        this._ensureEngine('presto');
     }
     protected getIntrospectAttributes(): Promise<Attributes> {
         return toArray(

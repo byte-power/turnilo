@@ -219,13 +219,12 @@ export class SettingsManager {
     const { sources, logger } = this;
 
     logger.log(`Got queryable external dataset update for ${dataCubeName} in cluster ${cluster.name}`);
-
     let dataCube = getDataCube(sources, dataCubeName);
     if (!dataCube) {
       dataCube = fromClusterAndExternal(dataCubeName, cluster, changedExternal);
     }
     const queryableDataCube = attachExternalExecutor(dataCube, changedExternal);
-
+    
     if (queryableDataCube.refreshRule.isQuery()) {
       this.timeMonitor.addCheck(queryableDataCube.name, () => {
         return maxTimeQuery(queryableDataCube.timeAttribute, queryableDataCube.executor);

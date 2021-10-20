@@ -194,7 +194,7 @@ export class Cluster extends BaseImmutable<ClusterValue, ClusterJS> {
 
   public makeExternalFromSourceName(source: string, version?: string): External {
     return External.fromValue({
-      engine: "druid",
+      engine: "presto",
       source,
       version,
       suppress: true,

@@ -1,5 +1,5 @@
 import { PlywoodLocator, basicLocator, PlywoodRequester } from 'plywood-base-api';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { Client } from 'presto-client-ts';
 
 
@@ -28,9 +28,8 @@ export function prestoRequesterFactory(parameters: PrestoRequesterParameters): P
     return (requester): Readable => {
         let query = requester.query;
 
-        let stream = new Readable({
-            objectMode: true,
-            read: function() {}
+        let stream = new PassThrough({
+            objectMode: true
           });
 
         locator().then((location) => {
@@ -48,9 +47,12 @@ export function prestoRequesterFactory(parameters: PrestoRequesterParameters): P
                     stream.push(data);
                 },
                 success: function (error, stats) {
+                    stream.push(null);
+                    stream.end();
                 },
                 error: function (error) {
                     stream.emit(error)
+                    stream.end();
                 }
             });
         })
