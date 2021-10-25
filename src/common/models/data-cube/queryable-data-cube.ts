@@ -160,7 +160,7 @@ export function attachExternalExecutor(dataCube: DataCube, external: External): 
   const executor = basicExecutorFactory({
     datasets: { main: external }
   });
-
+  
   return {
     ...addAttributes(dataCube, external.attributes),
     executor

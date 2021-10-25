@@ -24,8 +24,8 @@ export function maxTimeQuery(timeAttribute?: RefExpression, executor?: Executor)
   const ex = ply().apply("maxTime", $("main").max(timeAttribute));
 
   return executor(ex).then((dataset: Dataset) => {
-    const maxTimeDate = dataset.data[0]["maxTime"] as Date;
-    if (isNaN(maxTimeDate as any)) return null;
+    const maxTimeDate = new Date(dataset.data[0]["maxTime"] as Date);
+    // if (isNaN(maxTimeDate as any)) return null;
     return maxTimeDate;
   });
 }
