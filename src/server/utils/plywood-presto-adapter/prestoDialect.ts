@@ -1,6 +1,5 @@
 import { Duration, Timezone } from 'chronoshift';
 import { PlyType, SQLDialect } from 'plywood';
-// import { SQLDialect } from 'plywood/build/dialect/baseDialect';
 
 export class PrestoDialect extends SQLDialect {
   static TIME_BUCKETING: Record<string, string> = {
@@ -54,6 +53,7 @@ export class PrestoDialect extends SQLDialect {
     },
     STRING: {
       NUMBER: 'CAST($$ AS varchar)',
+      STRING: 'CAST($$ AS varchar)'
     },
   };
 
@@ -103,7 +103,7 @@ export class PrestoDialect extends SQLDialect {
     let bucketFormat = PrestoDialect.TIME_BUCKETING[duration.toString()];
     if (!bucketFormat) throw new Error(`unsupported duration '${duration}'`);
     return this.walltimeToUTC(
-      '${bucketFormat}(${this.utcToWalltime(operand, timezone)})',
+      `${bucketFormat}(${this.utcToWalltime(operand, timezone)})`,
       timezone,
     );
   }
@@ -121,28 +121,36 @@ export class PrestoDialect extends SQLDialect {
   public timeShiftExpression(
     operand: string,
     duration: Duration,
-    // step: int,
     timezone: Timezone,
   ): string {
-    // if (step === 0) return operand;
 
-    // // https://dev.mysql.com/doc/refman/5.5/en/date-and-time-functions.html#function_date-add
-    // let sqlFn = step > 0 ? 'DATE_ADD(' : 'DATE_SUB(';
-    // let spans = duration.multiply(Math.abs(step)).valueOf();
-    // if (spans.week) {
-    //   return sqlFn + `'WEEK', ` + String(spans.week) + ', ' + operand + ')';
-    // }
-    // if (spans.year || spans.month) {
-    //   let expr = String(spans.year || 0) + '-' + String(spans.month || 0);
-    //   operand = sqlFn + operand + ", INTERVAL '" + expr + "')";
-    // }
-    // if (spans.day || spans.hour || spans.minute || spans.second) {
-    //   let expr =
-    //     String(spans.day || 0) +
-    //     ' ' +
-    //     [spans.hour || 0, spans.minute || 0, spans.second || 0].join(':');
-    //   operand = sqlFn + operand + ", INTERVAL '" + expr + "' DAY_SECOND)";
-    // }
+    function interval_statement(unit: any, value: any) {
+      return ' + INTERVAL \'' + String(value) + '\' ' + unit;
+    }
+
+    let sqlFn = 'DATE_ADD(';
+    let spans = duration.valueOf();
+    if (spans.week) {
+      return operand + interval_statement('WEEK', spans.week);
+    }
+    if (spans.year) {
+      operand = operand + interval_statement('YEAR', spans.year);
+    }
+    if (spans.month) {
+      operand = operand + interval_statement('MONTH', spans.month);
+    }
+    if (spans.day) {
+      operand = operand + interval_statement('DAY', spans.day);
+    }
+    if (spans.hour) {
+      operand = operand + interval_statement('HOUR', spans.hour);
+    }
+    if (spans.minute) {
+      operand = operand + interval_statement('MINUTE', spans.minute);
+    }
+    if (spans.second) {
+      operand = operand + interval_statement('SECOND', spans.second);
+    }
     return operand;
   }
 
@@ -153,4 +161,12 @@ export class PrestoDialect extends SQLDialect {
   public indexOfExpression(str: string, substr: string): string {
     return `POSITION(${substr} IN ${str}) - 1`;
   }
+
+  public isNotDistinctFromExpression(a: string, b: string): string {
+    const nullConst = this.nullConstant();
+    if (a === nullConst) return `${b} IS ${nullConst}`;
+    if (b === nullConst) return `${a} IS ${nullConst}`;
+    return `(${a} IS NOT DISTINCT FROM ${this.castExpression('STRING', b, 'STRING')})`;
+  }
+
 }

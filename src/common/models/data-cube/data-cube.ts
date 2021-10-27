@@ -344,7 +344,7 @@ export function fromConfig(config: DataCubeJS & LegacyDataCubeJS, cluster?: Clus
     title: config.title || config.name,
     description,
     extendedDescription,
-    clusterName: config.clusterName || "druid",
+    clusterName: config.clusterName || "presto",
     source: config.source || config.name,
     group: config.group || null,
     subsetExpression: subsetFormula ? Expression.fromJSLoose(subsetFormula) : Expression.TRUE,
