@@ -166,7 +166,7 @@ export class PrestoDialect extends SQLDialect {
     const nullConst = this.nullConstant();
     if (a === nullConst) return `${b} IS ${nullConst}`;
     if (b === nullConst) return `${a} IS ${nullConst}`;
-    return `(${a} IS NOT DISTINCT FROM ${this.castExpression('STRING', b, 'STRING')})`;
+    return `(${a} IN (${b}))`;
   }
 
 }
