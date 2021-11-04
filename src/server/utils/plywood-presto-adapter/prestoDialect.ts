@@ -103,7 +103,7 @@ export class PrestoDialect extends SQLDialect {
     let bucketFormat = PrestoDialect.TIME_BUCKETING[duration.toString()];
     if (!bucketFormat) throw new Error(`unsupported duration '${duration}'`);
     return this.walltimeToUTC(
-      `${bucketFormat}(${this.utcToWalltime(operand, timezone)})`,
+      `DATE_TRUNC('${bucketFormat}',${this.utcToWalltime(operand, timezone)})`,
       timezone,
     );
   }

@@ -59,6 +59,7 @@ function readClusters({ clusters, druidHost, brokerHost }: ClustersConfig): Clus
   if (isTruthy(druidHost) || isTruthy(brokerHost)) {
     return [Cluster.fromJS({
       name: "druid",
+      type: "druid",
       url: druidHost || brokerHost
     })];
   }

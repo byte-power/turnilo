@@ -26,7 +26,8 @@ import { addAttributes } from "./queryable-data-cube";
 
 describe("DataCube", () => {
   const druidCluster = Cluster.fromJS({
-    name: "druid"
+    name: "druid",
+    type: "druid",
   });
 
   describe("validates", () => {

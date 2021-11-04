@@ -26,6 +26,9 @@ export type SourceListScan = "disable" | "auto";
 
 export interface ClusterValue {
   name: string;
+  type: string;
+  catalog?: string;  //presto catalog
+  schema?: string; //presto schema
   url?: string;
   title?: string;
   version?: string;
@@ -44,7 +47,10 @@ export interface ClusterValue {
 
 export interface ClusterJS {
   name: string;
+  type: string;
   title?: string;
+  catalog?: string;
+  schema?: string;
   url?: string;
   version?: string;
   timeout?: number;
@@ -81,6 +87,13 @@ function validateUrl(url: string): void {
   }
 }
 
+function validateClusterType(type: string): void {
+  let typeList = ["presto", "druid"]
+  if (typeList.indexOf(type) < 0) {
+    throw new Error(`Cluster type: ${type} is not supported`)
+  }
+}
+
 function oldHostParameter(cluster: any): string {
   return cluster.host || cluster.druidHost || cluster.brokerHost;
 }
@@ -112,6 +125,9 @@ export class Cluster extends BaseImmutable<ClusterValue, ClusterJS> {
   static PROPERTIES: Property[] = [
     { name: "name", validate: [verifyUrlSafeName, ensureNotNative] },
     { name: "url", defaultValue: null, validate: [validateUrl] },
+    { name: "type", defaultValue: null, validate: [validateClusterType]},
+    { name: "catalog", defaultValue: null},
+    { name: "schema", defaultValue: null},
     { name: "title", defaultValue: "" },
     { name: "version", defaultValue: null },
     { name: "timeout", defaultValue: undefined },
@@ -155,11 +171,12 @@ export class Cluster extends BaseImmutable<ClusterValue, ClusterJS> {
   }];
 
   // public type = "druid";
-  public type = "presto";
+  public type: string;
 
   public name: string;
   public url: string;
-  public catalog: string = 'hive';  //presto catalog, default value is "hive"
+  public catalog: string;  //presto catalog
+  public schema: string; //presto schema
   public title: string;
   public version: string;
   public timeout: number;
@@ -188,13 +205,14 @@ export class Cluster extends BaseImmutable<ClusterValue, ClusterJS> {
   public toClientCluster(): Cluster {
     return new Cluster({
       name: this.name,
+      type: this.type,
       timeout: this.timeout
     });
   }
 
   public makeExternalFromSourceName(source: string, version?: string): External {
     return External.fromValue({
-      engine: "presto",
+      engine: this.type,
       source,
       version,
       suppress: true,

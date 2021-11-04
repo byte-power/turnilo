@@ -225,10 +225,11 @@ function readConfig(config: AppSettingsJS & SourcesJS) {
     };
 }
 
-function readArgs(file: string | undefined, url: string | undefined) {
+function readArgs(file: string | undefined, clusterType: string | undefined, url: string | undefined) {
   const sources = {
     clusters: !isTruthy(url) ? [] : [new Cluster({
       name: "presto",
+      type: clusterType,
       url,
       sourceListScan: "auto",
       sourceListRefreshInterval: Cluster.DEFAULT_SOURCE_LIST_REFRESH_INTERVAL,
@@ -249,10 +250,20 @@ function readArgs(file: string | undefined, url: string | undefined) {
     sources
   };
 }
+let clusterType: string = undefined;
+let url: string = undefined;
+if (parsedArgs.presto) {
+  clusterType = "presto";
+  url = parsedArgs.presto;
+}
+if (parsedArgs.druid) {
+  clusterType = "druid";
+  url = parsedArgs.druid;
+}
 
 const { appSettings, sources } = configContent
   ? readConfig(configContent)
-  : readArgs(parsedArgs.file, parsedArgs.presto);
+  : readArgs(parsedArgs.file, clusterType, url);
 
 //register presto external adapter
 External.register(PrestoExternal);
